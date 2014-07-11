@@ -1,13 +1,39 @@
 package main
 
+import "bytes"
 import "net/http"
 import "fmt"
 import "os"
+import "log"
 import "strconv"
 
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
         fmt.Fprintf(w, "<html><title>Doccer</title></html>")
+}
+
+func newDocHandler(w http.ResponseWriter, r *http.Request) {
+        if r.Method == "POST" {
+            err := r.ParseForm()
+            if err != nil {
+                return
+            }
+
+            log.Println(r.Form["name"][0])
+            content := r.Form["name"][0]
+            var buffer bytes.Buffer
+
+            buffer.WriteString(content + "\n")
+            for i :=0; i < len(content); i++ {
+                buffer.WriteString("=")
+            }
+            log.Println(buffer.String())
+            log.Println(content)
+            http.Redirect(w, r, "/doc/8d6ac39986ccd929d7cc1825efb0faa841a46e0a", 301)
+
+        } else {
+            fmt.Fprintf(w, "<html><title>Error :: Doccer</title></html>")
+        }
 }
 
 func main() {
@@ -25,5 +51,6 @@ func main() {
         }
 
         http.HandleFunc("/", rootHandler)
+        http.HandleFunc("/doc/new", newDocHandler)
         http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil)
 }
