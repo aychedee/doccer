@@ -18,9 +18,8 @@ class CreateDocumentTest(DoccerTestCase):
             response.headers['location'],
             '/doc/%s' % (sha1hash,)
         )
-        self.assertEqual(response, '')
-        with open('%s/content/%s.md' % (sha1hash,)) as f:
-            self.assertEqual(f.read(), 'My Latest Notes\n================')
+        with open('%s/content/%s.md' % (self.PATH, sha1hash,)) as f:
+            self.assertEqual(f.read(), 'My Latest Notes\n===============\n')
 
     def test_server_returns_valid_http_response(self):
         response = requests.get('http://127.0.0.1:9999/')
