@@ -1,25 +1,31 @@
 package main
 
-import "bytes"
-import "net/http"
-import "fmt"
-import "os"
-import "log"
-import "strconv"
+import (
+    "bytes"
+    "crypto/sha1"
+    "net/http"
+    "fmt"
+    "log"
+    "os"
+    "strconv"
+)
 
+func check(e error) {
+    if e != nil {
+        panic(e)
+    }
+}
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
         fmt.Fprintf(w, "<html><title>Doccer</title></html>")
 }
 
+
 func newDocHandler(w http.ResponseWriter, r *http.Request) {
         if r.Method == "POST" {
             err := r.ParseForm()
-            if err != nil {
-                return
-            }
+            check(err)
 
-            log.Println(r.Form["name"][0])
             content := r.Form["name"][0]
             var buffer bytes.Buffer
 
@@ -27,9 +33,22 @@ func newDocHandler(w http.ResponseWriter, r *http.Request) {
             for i :=0; i < len(content); i++ {
                 buffer.WriteString("=")
             }
-            log.Println(buffer.String())
-            log.Println(content)
-            http.Redirect(w, r, "/doc/8d6ac39986ccd929d7cc1825efb0faa841a46e0a", 301)
+            buffer.WriteString("\n")
+            data := []byte(buffer.String())
+
+            f, err := os.Create(fmt.Sprintf("content/%x.md", sha1.Sum(data)))
+            check(err)
+
+            defer f.Close()
+
+            num, err := f.WriteString(buffer.String())
+            check(err)
+
+            log.Println(num)
+
+            f.Sync()
+
+            http.Redirect(w, r, fmt.Sprintf("/doc/%x", sha1.Sum(data)), 301)
 
         } else {
             fmt.Fprintf(w, "<html><title>Error :: Doccer</title></html>")
