@@ -1,13 +1,18 @@
 package main
 
 import (
+    "bufio"
     "bytes"
     "crypto/sha1"
+    "encoding/json"
     "net/http"
+    "io/ioutil"
+    "strings"
+    "strconv"
     "fmt"
     "log"
+    "time"
     "os"
-    "strconv"
 )
 
 func check(e error) {
@@ -16,10 +21,41 @@ func check(e error) {
     }
 }
 
+type Document struct {
+    Name string `json:"name"`
+    Hash string `json:"hash"`
+    Created int64 `json:"created"`
+}
+
 func rootHandler(w http.ResponseWriter, r *http.Request) {
         fmt.Fprintf(w, "<html><title>Doccer</title></html>")
 }
 
+func itemsHandler(w http.ResponseWriter, r *http.Request) {
+        documents := []Document{}
+        contents, err := ioutil.ReadDir("accounts/default")
+        check(err)
+        for _, f := range contents {
+            fi, err := os.Open(fmt.Sprintf("accounts/default/%s", f.Name()))
+            check(err)
+            scanner := bufio.NewScanner(fi)
+            for scanner.Scan() {
+                fields := strings.Fields(scanner.Text())
+                ts, err := strconv.ParseInt(fields[1], 10, 64)
+                check(err)
+
+                document := Document{f.Name(), fields[0], ts}
+                documents = append(documents, document)
+                fmt.Println(f.Name())
+
+            }
+
+
+        }
+        b, err := json.Marshal(documents)
+        check(err)
+        fmt.Fprintf(w, string(b))
+}
 
 func newDocHandler(w http.ResponseWriter, r *http.Request) {
         if r.Method == "POST" {
@@ -36,19 +72,35 @@ func newDocHandler(w http.ResponseWriter, r *http.Request) {
             buffer.WriteString("\n")
             data := []byte(buffer.String())
 
-            f, err := os.Create(fmt.Sprintf("content/%x.md", sha1.Sum(data)))
+            hash := sha1.Sum(data)
+
+            glob_f, err := os.Create(fmt.Sprintf("content/%x.md", hash))
             check(err)
 
-            defer f.Close()
+            defer glob_f.Close()
 
-            num, err := f.WriteString(buffer.String())
+            num, err := glob_f.WriteString(buffer.String())
             check(err)
 
             log.Println(num)
 
-            f.Sync()
+            glob_f.Sync()
 
-            http.Redirect(w, r, fmt.Sprintf("/doc/%x", sha1.Sum(data)), 301)
+            note_f, err := os.Create(fmt.Sprintf("accounts/default/%s", content))
+            check(err)
+
+            defer note_f.Close()
+
+            updated := time.Now().Unix()
+
+            written, err := note_f.WriteString(fmt.Sprintf("%x %d", hash, updated))
+            check(err)
+
+            log.Println(written)
+
+            note_f.Sync()
+
+            http.Redirect(w, r, fmt.Sprintf("/doc/%x", hash), 301)
 
         } else {
             fmt.Fprintf(w, "<html><title>Error :: Doccer</title></html>")
@@ -70,6 +122,7 @@ func main() {
         }
 
         http.HandleFunc("/", rootHandler)
+        http.HandleFunc("/items/", itemsHandler)
         http.HandleFunc("/doc/new", newDocHandler)
         http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil)
 }
