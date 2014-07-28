@@ -18,9 +18,18 @@ function loadXMLDoc() {
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == 4 ) {
            if(xmlhttp.status == 200){
-               document.getElementById("documents").innerHTML = xmlhttp.responseText;
+               var docs = document.getElementById("documents");
                var resp = JSON.parse(xmlhttp.responseText);
-               for (var i=0; resp.length < i; i++) {
+               console.log(resp);
+               for (var i=0; i < resp.length; i++) {
+                   var link = document.createElement('a');
+                   link.setAttribute('href', '/doc/' + resp[i].hash);
+                   var el = document.createElement('button');
+                   link.appendChild(el);
+                   el.innerText = resp[i].name;
+                   el.id = resp[i].hash;
+                   docs.appendChild(link);
+
                    console.log(resp[i]);
                }
            }
@@ -48,5 +57,9 @@ Hi ya
 </div>
 
 <div id="documents"></div>
+<form action="/doc/new" method="POST">
+    <input name="name" placeholder="Enter a new document name" type="text"></input>
+    <input type="submit"></input>
+</form>
 </body>
 </html>
