@@ -6,6 +6,7 @@ import (
     "crypto/sha1"
     "encoding/json"
     "net/http"
+    "html/template"
     "io/ioutil"
     "strings"
     "strconv"
@@ -28,7 +29,10 @@ type Document struct {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-        fmt.Fprintf(w, "<html><title>Doccer</title></html>")
+    t, err := template.ParseFiles("index.html")
+    check(err)
+    t.Execute(w, "")
+
 }
 
 func itemsHandler(w http.ResponseWriter, r *http.Request) {
@@ -47,10 +51,7 @@ func itemsHandler(w http.ResponseWriter, r *http.Request) {
                 document := Document{f.Name(), fields[0], ts}
                 documents = append(documents, document)
                 fmt.Println(f.Name())
-
             }
-
-
         }
         b, err := json.Marshal(documents)
         check(err)
