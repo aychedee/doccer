@@ -52,11 +52,11 @@ loadXMLDoc();
 </head>
 <body>
 <div contenteditable style="font-family: monospace; font-size: 28px;">
-Hi ya
+    {{.Content}}
 
 </div>
-
 <div id="documents"></div>
+
 <form action="/doc/new" method="POST">
     <input name="name" placeholder="Enter a new document name" type="text"></input>
     <input type="submit"></input>

@@ -22,20 +22,40 @@ func check(e error) {
     }
 }
 
+func forwardSlash(r rune) bool {
+    return r == '/'
+}
+
 type Document struct {
     Name string `json:"name"`
     Hash string `json:"hash"`
     Created int64 `json:"created"`
 }
 
+type Content struct {
+    Content string
+}
+
+
 func rootHandler(w http.ResponseWriter, r *http.Request) {
     t, err := template.ParseFiles("index.html")
     check(err)
-    t.Execute(w, "")
+    content := Content{"You can start by editing this..."}
+    t.Execute(w, content)
 
 }
 
-func itemsHandler(w http.ResponseWriter, r *http.Request) {
+func docHandler(w http.ResponseWriter, r *http.Request) {
+        contentHash := strings.FieldsFunc(r.URL.Path, forwardSlash)
+        contents, err := ioutil.ReadFile(fmt.Sprintf("content/%s.md", contentHash[1]))
+        check(err)
+        t, err := template.ParseFiles("index.html")
+        check(err)
+        content := Content{string(contents)}
+        t.Execute(w, content)
+}
+
+func docsHandler(w http.ResponseWriter, r *http.Request) {
         documents := []Document{}
         contents, err := ioutil.ReadDir("accounts/default")
         check(err)
@@ -50,7 +70,6 @@ func itemsHandler(w http.ResponseWriter, r *http.Request) {
 
                 document := Document{f.Name(), fields[0], ts}
                 documents = append(documents, document)
-                fmt.Println(f.Name())
             }
         }
         b, err := json.Marshal(documents)
@@ -75,31 +94,31 @@ func newDocHandler(w http.ResponseWriter, r *http.Request) {
 
             hash := sha1.Sum(data)
 
-            glob_f, err := os.Create(fmt.Sprintf("content/%x.md", hash))
+            globF, err := os.Create(fmt.Sprintf("content/%x.md", hash))
             check(err)
 
-            defer glob_f.Close()
+            defer globF.Close()
 
-            num, err := glob_f.WriteString(buffer.String())
+            num, err := globF.WriteString(buffer.String())
             check(err)
 
             log.Println(num)
 
-            glob_f.Sync()
+            globF.Sync()
 
-            note_f, err := os.Create(fmt.Sprintf("accounts/default/%s", content))
+            noteF, err := os.Create(fmt.Sprintf("accounts/default/%s", content))
             check(err)
 
-            defer note_f.Close()
+            defer noteF.Close()
 
             updated := time.Now().Unix()
 
-            written, err := note_f.WriteString(fmt.Sprintf("%x %d", hash, updated))
+            written, err := noteF.WriteString(fmt.Sprintf("%x %d", hash, updated))
             check(err)
 
             log.Println(written)
 
-            note_f.Sync()
+            noteF.Sync()
 
             http.Redirect(w, r, fmt.Sprintf("/doc/%x", hash), 301)
 
@@ -114,12 +133,12 @@ func main() {
 
         if len(os.Args) > 2 {
             address = os.Args[1]
-            given_port, err := strconv.Atoi(os.Args[2])
+            givenPort, err := strconv.Atoi(os.Args[2])
             if err != nil {
                 fmt.Println(err)
                 os.Exit(2)
             }
-            port = given_port
+            port = givenPort
         }
 
         http.HandleFunc("/", rootHandler)
