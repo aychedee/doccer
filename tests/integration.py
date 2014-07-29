@@ -3,8 +3,10 @@
 from unittest import TestCase
 import requests
 from subprocess import check_output, Popen
+import os
 from os.path import abspath, dirname
 import time
+import glob
 
 PATH = abspath(dirname(dirname(__file__)))
 
@@ -22,6 +24,9 @@ class DoccerTestCase(TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.stop_doccer()
+        files = glob.glob(cls.PATH + '/accounts/default/*')
+        for f in files:
+            os.unlink(f)
 
     def api(self, endpoint, method, data={}):
         response = getattr(requests, method.lower())(
