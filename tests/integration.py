@@ -28,14 +28,18 @@ class DoccerTestCase(TestCase):
         for f in files:
             os.unlink(f)
 
-    def api(self, endpoint, method, data={}):
+    def api(self, endpoint, method, data={}, status_code=200, headers={}):
         response = getattr(requests, method.lower())(
             '%s%s' % (self.SERVER_URL, endpoint),
             data=data,
             allow_redirects=False
         )
-        print response.content
-        return (response.status_code, response.content)
+        if headers:
+            for key in headers.keys():
+                self.assertEqual(response.headers[key], headers[key])
+        self.assertEqual(response.status_code, status_code)
+
+        return response.content
 
     @classmethod
     def doccer_running(cls):
