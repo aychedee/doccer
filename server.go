@@ -123,7 +123,8 @@ func main() {
         }
 
         http.HandleFunc("/", rootHandler)
-        http.HandleFunc("/items/", itemsHandler)
+        http.HandleFunc("/docs/", docsHandler)
+        http.HandleFunc("/doc/", docHandler)
         http.HandleFunc("/doc/new", newDocHandler)
         http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil)
 }

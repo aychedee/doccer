@@ -13,7 +13,7 @@ class CreateDocumentTest(DoccerTestCase):
         self.api('/doc/new', 'POST', data=dict(name=name1))
         self.api('/doc/new', 'POST', data=dict(name=name2))
 
-        status_code, content = self.api('/items/', 'GET')
+        content = self.api('/docs/', 'GET')
 
         self.assertEqual(status_code, 200)
         data = json.loads(content)
