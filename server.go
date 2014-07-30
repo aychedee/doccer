@@ -36,21 +36,27 @@ type Document struct {
 
 type Content struct {
     Content string
+    Name string
 }
 
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
     t, err := template.ParseFiles("index.html")
     check(err)
-    content := Content{"You can start by editing this..."}
+    content := Content{"You can start by editing this...", "None"}
     t.Execute(w, content)
 
 }
 
+func getBlob(hash string) (contents []byte) {
+    contents, err := ioutil.ReadFile(fmt.Sprintf("content/%s", hash))
+    check(err)
+    return
+}
+
 func blobHandler(w http.ResponseWriter, r *http.Request) {
         contentHash := strings.FieldsFunc(r.URL.Path, forwardSlash)
-        contents, err := ioutil.ReadFile(fmt.Sprintf("content/%s", contentHash[1]))
-        check(err)
+        contents := getBlob(contentHash[1])
         fmt.Fprintf(w, "%s", contents)
 }
 
@@ -61,6 +67,7 @@ func docsHandler(w http.ResponseWriter, r *http.Request) {
         for _, f := range contents {
             fi, err := os.Open(fmt.Sprintf("accounts/default/%s", f.Name()))
             check(err)
+            defer fi.Close()
             scanner := bufio.NewScanner(fi)
             for scanner.Scan() {
                 fields := strings.Fields(scanner.Text())
@@ -80,7 +87,20 @@ func docsHandler(w http.ResponseWriter, r *http.Request) {
 func docHandler(w http.ResponseWriter, r *http.Request) {
     t, err := template.ParseFiles("index.html")
     check(err)
-    content := Content{"You can start by editing this..."}
+
+    urlParts := strings.FieldsFunc(r.URL.Path, forwardSlash)
+    name, err := url.QueryUnescape(urlParts[1])
+
+    doc, err := ioutil.ReadFile(fmt.Sprintf("accounts/default/%s", name))
+    check(err)
+
+    edits := strings.Split(string(doc), "\n")
+
+    last := edits[len(edits)-2]
+    fields := strings.Fields(last)
+
+    latest := getBlob(fields[0])
+    content := Content{string(latest), name}
     t.Execute(w, content)
 }
 

@@ -39,3 +39,13 @@ class SaveDocumentTest(DoccerTestCase):
                 int(time.time())
             )
 
+    def test_latest_version_of_doc_content_is_returned(self):
+        name = 'Latest doccer doc'
+        content = 'Here is some content for the doc\nNoice\n'
+        self.api('/new', 'POST', data=dict(name=name), status_code=301)
+        data = dict(name=name, content=content)
+        self.api('/save', 'POST', data=data)
+
+        response = self.api('/doc/Latest+doccer+doc', 'GET')
+
+        self.assertIn(content, response)
