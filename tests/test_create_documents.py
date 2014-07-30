@@ -15,7 +15,7 @@ class CreateDocumentTest(DoccerTestCase):
             headers=dict(location='/doc/My+Latest+Notes')
         )
 
-        with open('%s/content/%s.md' % (self.PATH, sha1hash,)) as f:
+        with open('%s/content/%s' % (self.PATH, sha1hash,)) as f:
             self.assertEqual(f.read(), 'My Latest Notes\n===============\n')
 
     def test_server_returns_valid_http_response(self):

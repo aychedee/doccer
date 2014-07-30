@@ -49,7 +49,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 
 func blobHandler(w http.ResponseWriter, r *http.Request) {
         contentHash := strings.FieldsFunc(r.URL.Path, forwardSlash)
-        contents, err := ioutil.ReadFile(fmt.Sprintf("content/%s.md", contentHash[1]))
+        contents, err := ioutil.ReadFile(fmt.Sprintf("content/%s", contentHash[1]))
         check(err)
         t, err := template.ParseFiles("index.html")
         check(err)
@@ -142,7 +142,7 @@ func newHandler(w http.ResponseWriter, r *http.Request) {
 
             hash := sha1.Sum(data)
 
-            globF, err := os.Create(fmt.Sprintf("content/%x.md", hash))
+            globF, err := os.Create(fmt.Sprintf("content/%x", hash))
             check(err)
 
             defer globF.Close()
