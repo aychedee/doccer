@@ -11,7 +11,6 @@ import (
     "strings"
     "strconv"
     "fmt"
-    "log"
     "time"
     "os"
 )
@@ -20,6 +19,12 @@ func check(e error) {
     if e != nil {
         panic(e)
     }
+}
+
+func splitUrl(url string) (parts []string) {
+    trimmed := strings.Trim(url, "/ ")
+    parts = strings.Split(trimmed, "/")
+    return
 }
 
 func docHistory(name string) (history []string) {
@@ -76,8 +81,8 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func blobHandler(w http.ResponseWriter, r *http.Request) {
-        hash := strings.Split(r.URL.Path, "/")
-        contents := getBlob(hash[2])
+        parts := splitUrl(r.URL.Path)
+        contents := getBlob(parts[1])
         fmt.Fprintf(w, "%s", contents)
 }
 
@@ -109,8 +114,8 @@ func docHandler(w http.ResponseWriter, r *http.Request) {
     t, err := template.ParseFiles("index.html")
     check(err)
 
-    urlParts := strings.Split(r.URL.Path, "/")
-    name, err := url.QueryUnescape(urlParts[2])
+    parts := splitUrl(r.URL.Path)
+    name, err := url.QueryUnescape(parts[1])
 
     history := docHistory(name)
 
@@ -136,10 +141,9 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
             check(err)
 
             updated := time.Now().Unix()
-            written, err := docF.WriteString(fmt.Sprintf("%s %d\n", hash, updated))
+            _, err = docF.WriteString(fmt.Sprintf("%s %d\n", hash, updated))
             check(err)
 
-            log.Println(written)
 
             docF.Sync()
 
@@ -168,10 +172,9 @@ func newHandler(w http.ResponseWriter, r *http.Request) {
 
             updated := time.Now().Unix()
 
-            written, err := noteF.WriteString(fmt.Sprintf("%s %d\n", hash, updated))
+            _, err = noteF.WriteString(fmt.Sprintf("%s %d\n", hash, updated))
             check(err)
 
-            log.Println(written)
 
             noteF.Sync()
 

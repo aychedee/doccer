@@ -28,15 +28,15 @@ class SaveDocumentTest(DoccerTestCase):
             )
             self.assertAlmostEqual(
                 int(first_save.split()[1]),
-                int(time.time())
+                int(time.time()), delta=10
             )
             self.assertEqual(
                 second_save.split()[0],
                 'e2c3a5c4570451054eef098a11b9ad10257c8cbe'
             )
-            self.assertEqual(
+            self.assertAlmostEqual(
                 int(second_save.split()[1]),
-                int(time.time())
+                int(time.time()), delta=10
             )
 
     def test_latest_version_of_doc_content_is_returned(self):
@@ -47,5 +47,16 @@ class SaveDocumentTest(DoccerTestCase):
         self.api('/save', 'POST', data=data)
 
         response = self.api('/doc/Latest+doccer+doc', 'GET')
+
+        self.assertIn(content, response)
+
+    def test_blobs_can_be_retrieved(self):
+        name = 'Latest doccer doc'
+        content = 'Here is some content for the doc\nNoice\n'
+        self.api('/new', 'POST', data=dict(name=name), status_code=301)
+        data = dict(name=name, content=content)
+        response = self.api('/save', 'POST', data=data)
+
+        response = self.api('/blob/%s' % (response,), 'GET')
 
         self.assertIn(content, response)
