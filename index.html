@@ -23,7 +23,7 @@ function loadXMLDoc() {
                console.log(resp);
                for (var i=0; i < resp.length; i++) {
                    var link = document.createElement('a');
-                   link.setAttribute('href', '/doc/' + resp[i].hash);
+                   link.setAttribute('href', '/doc/' + resp[i].encoded);
                    var el = document.createElement('button');
                    link.appendChild(el);
                    el.innerText = resp[i].name;
@@ -57,7 +57,7 @@ loadXMLDoc();
 </div>
 <div id="documents"></div>
 
-<form action="/doc/new" method="POST">
+<form action="/new" method="POST">
     <input name="name" placeholder="Enter a new document name" type="text"></input>
     <input type="submit"></input>
 </form>

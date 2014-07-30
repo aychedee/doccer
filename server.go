@@ -6,6 +6,7 @@ import (
     "crypto/sha1"
     "encoding/json"
     "net/http"
+    "net/url"
     "html/template"
     "io/ioutil"
     "strings"
@@ -28,6 +29,7 @@ func forwardSlash(r rune) bool {
 
 type Document struct {
     Name string `json:"name"`
+    Encoded string `json:"encoded"`
     Hash string `json:"hash"`
     Created int64 `json:"created"`
 }
@@ -67,8 +69,9 @@ func docsHandler(w http.ResponseWriter, r *http.Request) {
                 fields := strings.Fields(scanner.Text())
                 ts, err := strconv.ParseInt(fields[1], 10, 64)
                 check(err)
+                escaped := url.QueryEscape(f.Name())
 
-                document := Document{f.Name(), fields[0], ts}
+                document := Document{f.Name(), escaped, fields[0], ts}
                 documents = append(documents, document)
             }
         }
@@ -89,11 +92,11 @@ func newHandler(w http.ResponseWriter, r *http.Request) {
             err := r.ParseForm()
             check(err)
 
-            content := r.Form["name"][0]
+            name := r.Form["name"][0]
             var buffer bytes.Buffer
 
-            buffer.WriteString(content + "\n")
-            for i :=0; i < len(content); i++ {
+            buffer.WriteString(name + "\n")
+            for i :=0; i < len(name); i++ {
                 buffer.WriteString("=")
             }
             buffer.WriteString("\n")
@@ -113,8 +116,10 @@ func newHandler(w http.ResponseWriter, r *http.Request) {
 
             globF.Sync()
 
-            noteF, err := os.Create(fmt.Sprintf("accounts/default/%s", content))
+            noteF, err := os.Create(fmt.Sprintf("accounts/default/%s", name))
             check(err)
+
+            encoded := url.QueryEscape(name)
 
             defer noteF.Close()
 
@@ -127,7 +132,7 @@ func newHandler(w http.ResponseWriter, r *http.Request) {
 
             noteF.Sync()
 
-            http.Redirect(w, r, fmt.Sprintf("/doc/%x", hash), 301)
+            http.Redirect(w, r, fmt.Sprintf("/doc/%s", encoded), 301)
 
         } else {
             fmt.Fprintf(w, "<html><title>Error :: Doccer</title></html>")

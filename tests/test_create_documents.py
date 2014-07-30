@@ -12,7 +12,7 @@ class CreateDocumentTest(DoccerTestCase):
         data = dict(name='My Latest Notes')
         self.api(
             '/new', 'post', data=data, status_code=301,
-            headers=dict(location='/doc/%s' % (sha1hash,))
+            headers=dict(location='/doc/My+Latest+Notes')
         )
 
         with open('%s/content/%s.md' % (self.PATH, sha1hash,)) as f:
