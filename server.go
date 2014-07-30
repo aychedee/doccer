@@ -2,7 +2,6 @@ package main
 
 import (
     "bufio"
-    "bytes"
     "crypto/sha1"
     "encoding/json"
     "net/http"
@@ -29,9 +28,22 @@ func getBlob(hash string) (contents []byte) {
     return
 }
 
-func writeBlob(data string) (hash string) {
-    return
+func writeBlob(data string) (stringHash string) {
+    bytes := []byte(data)
+    hash := sha1.Sum(bytes)
+    stringHash = fmt.Sprintf("%x", hash)
 
+    f, err := os.Create(fmt.Sprintf("content/%s", stringHash))
+    check(err)
+    defer f.Close()
+
+    num, err := f.Write(bytes)
+    check(err)
+    if num < len(bytes) {
+        panic("We didn't write all the bytes")
+    }
+    f.Sync()
+    return
 }
 
 type Document struct {
@@ -112,24 +124,14 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 
             name := r.Form["name"][0]
             content := r.Form["content"][0]
-            bytes := []byte(content)
-            hash := sha1.Sum(bytes)
-            f, err := os.Create(fmt.Sprintf("content/%x", hash))
-            check(err)
 
-            defer f.Close()
-
-            num, err := f.WriteString(content)
-            check(err)
-
-            log.Println(num)
-            f.Sync()
+            hash := writeBlob(content)
 
             docF, err := os.OpenFile(fmt.Sprintf("accounts/default/%s", name), os.O_APPEND|os.O_WRONLY, 0600)
             check(err)
 
             updated := time.Now().Unix()
-            written, err := docF.WriteString(fmt.Sprintf("%x %d\n", hash, updated))
+            written, err := docF.WriteString(fmt.Sprintf("%s %d\n", hash, updated))
             check(err)
 
             log.Println(written)
@@ -137,7 +139,7 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
             docF.Sync()
 
 
-            fmt.Fprintf(w, "%x", hash)
+            fmt.Fprintf(w, "%s", hash)
         } else {
             fmt.Fprintf(w, "<html><title>Error :: Doccer</title></html>")
         }
@@ -149,28 +151,8 @@ func newHandler(w http.ResponseWriter, r *http.Request) {
             check(err)
 
             name := r.Form["name"][0]
-            var buffer bytes.Buffer
 
-            buffer.WriteString(name + "\n")
-            for i :=0; i < len(name); i++ {
-                buffer.WriteString("=")
-            }
-            buffer.WriteString("\n")
-            data := []byte(buffer.String())
-
-            hash := sha1.Sum(data)
-
-            globF, err := os.Create(fmt.Sprintf("content/%x", hash))
-            check(err)
-
-            defer globF.Close()
-
-            num, err := globF.WriteString(buffer.String())
-            check(err)
-
-            log.Println(num)
-
-            globF.Sync()
+            hash := writeBlob("")
 
             noteF, err := os.Create(fmt.Sprintf("accounts/default/%s", name))
             check(err)
@@ -181,7 +163,7 @@ func newHandler(w http.ResponseWriter, r *http.Request) {
 
             updated := time.Now().Unix()
 
-            written, err := noteF.WriteString(fmt.Sprintf("%x %d\n", hash, updated))
+            written, err := noteF.WriteString(fmt.Sprintf("%s %d\n", hash, updated))
             check(err)
 
             log.Println(written)

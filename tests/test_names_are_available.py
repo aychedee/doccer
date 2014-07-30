@@ -21,8 +21,8 @@ class ListDocsTest(DoccerTestCase):
         self.assertEqual(data[0]['name'], 'A doccer document')
         self.assertEqual(data[0]['encoded'], 'A+doccer+document')
         self.assertEqual(
-            data[0]['hash'], 'd62e44d32f5f21f83c67ce12d7c2ef0b29ca80d5')
+            data[0]['hash'], self.EMPTY_HASH)
         self.assertEqual(data[1]['name'], 'My second+')
         self.assertEqual(data[1]['encoded'], 'My+second%2B')
         self.assertEqual(
-            data[1]['hash'], '20f5a7ef0502abca78de471c47beca182907ccff')
+            data[1]['hash'], self.EMPTY_HASH)

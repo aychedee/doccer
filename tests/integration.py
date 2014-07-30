@@ -16,6 +16,7 @@ class DoccerTestCase(TestCase):
     DEFAULT_HOST = '127.0.0.1'
     DEFAULT_PORT = 9999
     doccer_location = '%s/doccer' % (PATH,)
+    EMPTY_HASH = 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
 
     @classmethod
     def setUpClass(cls):

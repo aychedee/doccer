@@ -24,7 +24,7 @@ class SaveDocumentTest(DoccerTestCase):
             first_save, second_save, _ = contents.split('\n')
             self.assertEqual(
                 first_save.split()[0],
-                'b17d2dc018567c7c27ca96e1e63a2d01e258e3f9'
+                self.EMPTY_HASH
             )
             self.assertAlmostEqual(
                 int(first_save.split()[1]),
