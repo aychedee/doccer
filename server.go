@@ -51,10 +51,7 @@ func blobHandler(w http.ResponseWriter, r *http.Request) {
         contentHash := strings.FieldsFunc(r.URL.Path, forwardSlash)
         contents, err := ioutil.ReadFile(fmt.Sprintf("content/%s", contentHash[1]))
         check(err)
-        t, err := template.ParseFiles("index.html")
-        check(err)
-        content := Content{string(contents)}
-        t.Execute(w, content)
+        fmt.Fprintf(w, "%s", contents)
 }
 
 func docsHandler(w http.ResponseWriter, r *http.Request) {
