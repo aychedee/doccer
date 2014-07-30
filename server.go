@@ -22,6 +22,14 @@ func check(e error) {
     }
 }
 
+func docHistory(name string) (history []string) {
+    doc, err := ioutil.ReadFile(fmt.Sprintf("accounts/default/%s", name))
+    check(err)
+
+    history = strings.Split(string(doc), "\n")
+    return
+}
+
 func getBlob(hash string) (contents []byte) {
     contents, err := ioutil.ReadFile(fmt.Sprintf("content/%s", hash))
     check(err)
@@ -104,12 +112,9 @@ func docHandler(w http.ResponseWriter, r *http.Request) {
     urlParts := strings.Split(r.URL.Path, "/")
     name, err := url.QueryUnescape(urlParts[2])
 
-    doc, err := ioutil.ReadFile(fmt.Sprintf("accounts/default/%s", name))
-    check(err)
+    history := docHistory(name)
 
-    edits := strings.Split(string(doc), "\n")
-
-    last := edits[len(edits)-2]
+    last := history[len(history)-2]
     fields := strings.Fields(last)
 
     latest := getBlob(fields[0])
