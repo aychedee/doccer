@@ -10,8 +10,8 @@ class ListDocsTest(DoccerTestCase):
     def test_documents_can_be_listed(self):
         name1 = 'A doccer document'
         name2 = 'My second'
-        self.api('/doc/new', 'POST', data=dict(name=name1), status_code=301)
-        self.api('/doc/new', 'POST', data=dict(name=name2), status_code=301)
+        self.api('/new', 'POST', data=dict(name=name1), status_code=301)
+        self.api('/new', 'POST', data=dict(name=name2), status_code=301)
 
         content = self.api('/docs/', 'GET')
 

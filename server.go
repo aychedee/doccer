@@ -45,7 +45,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func docHandler(w http.ResponseWriter, r *http.Request) {
+func blobHandler(w http.ResponseWriter, r *http.Request) {
         contentHash := strings.FieldsFunc(r.URL.Path, forwardSlash)
         contents, err := ioutil.ReadFile(fmt.Sprintf("content/%s.md", contentHash[1]))
         check(err)
@@ -77,7 +77,14 @@ func docsHandler(w http.ResponseWriter, r *http.Request) {
         fmt.Fprintf(w, string(b))
 }
 
-func newDocHandler(w http.ResponseWriter, r *http.Request) {
+func docHandler(w http.ResponseWriter, r *http.Request) {
+    t, err := template.ParseFiles("index.html")
+    check(err)
+    content := Content{"You can start by editing this..."}
+    t.Execute(w, content)
+}
+
+func newHandler(w http.ResponseWriter, r *http.Request) {
         if r.Method == "POST" {
             err := r.ParseForm()
             check(err)
@@ -143,7 +150,8 @@ func main() {
 
         http.HandleFunc("/", rootHandler)
         http.HandleFunc("/docs/", docsHandler)
+        http.HandleFunc("/blob/", blobHandler)
+        http.HandleFunc("/new", newHandler)
         http.HandleFunc("/doc/", docHandler)
-        http.HandleFunc("/doc/new", newDocHandler)
         http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil)
 }

@@ -11,7 +11,7 @@ class CreateDocumentTest(DoccerTestCase):
         sha1hash = '8d6ac39986ccd929d7cc1825efb0faa841a46e0a'
         data = dict(name='My Latest Notes')
         self.api(
-            '/doc/new', 'post', data=data, status_code=301,
+            '/new', 'post', data=data, status_code=301,
             headers=dict(location='/doc/%s' % (sha1hash,))
         )
 
