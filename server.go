@@ -87,6 +87,44 @@ func docHandler(w http.ResponseWriter, r *http.Request) {
     t.Execute(w, content)
 }
 
+func saveHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method == "POST" {
+            err := r.ParseForm()
+            check(err)
+
+            name := r.Form["name"][0]
+            content := r.Form["content"][0]
+            bytes := []byte(content)
+            hash := sha1.Sum(bytes)
+            f, err := os.Create(fmt.Sprintf("content/%x", hash))
+            check(err)
+
+            defer f.Close()
+
+            num, err := f.WriteString(content)
+            check(err)
+
+            log.Println(num)
+            f.Sync()
+
+            docF, err := os.OpenFile(fmt.Sprintf("accounts/default/%s", name), os.O_APPEND|os.O_WRONLY, 0600)
+            check(err)
+
+            updated := time.Now().Unix()
+            written, err := docF.WriteString(fmt.Sprintf("%x %d\n", hash, updated))
+            check(err)
+
+            log.Println(written)
+
+            docF.Sync()
+
+
+            fmt.Fprintf(w, "%x", hash)
+        } else {
+            fmt.Fprintf(w, "<html><title>Error :: Doccer</title></html>")
+        }
+}
+
 func newHandler(w http.ResponseWriter, r *http.Request) {
         if r.Method == "POST" {
             err := r.ParseForm()
@@ -125,7 +163,7 @@ func newHandler(w http.ResponseWriter, r *http.Request) {
 
             updated := time.Now().Unix()
 
-            written, err := noteF.WriteString(fmt.Sprintf("%x %d", hash, updated))
+            written, err := noteF.WriteString(fmt.Sprintf("%x %d\n", hash, updated))
             check(err)
 
             log.Println(written)
@@ -157,6 +195,7 @@ func main() {
         http.HandleFunc("/docs/", docsHandler)
         http.HandleFunc("/blob/", blobHandler)
         http.HandleFunc("/new", newHandler)
+        http.HandleFunc("/save", saveHandler)
         http.HandleFunc("/doc/", docHandler)
         http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil)
 }
