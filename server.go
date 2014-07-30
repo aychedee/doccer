@@ -23,8 +23,15 @@ func check(e error) {
     }
 }
 
-func forwardSlash(r rune) bool {
-    return r == '/'
+func getBlob(hash string) (contents []byte) {
+    contents, err := ioutil.ReadFile(fmt.Sprintf("content/%s", hash))
+    check(err)
+    return
+}
+
+func writeBlob(data string) (hash string) {
+    return
+
 }
 
 type Document struct {
@@ -48,15 +55,9 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func getBlob(hash string) (contents []byte) {
-    contents, err := ioutil.ReadFile(fmt.Sprintf("content/%s", hash))
-    check(err)
-    return
-}
-
 func blobHandler(w http.ResponseWriter, r *http.Request) {
-        contentHash := strings.FieldsFunc(r.URL.Path, forwardSlash)
-        contents := getBlob(contentHash[1])
+        hash := strings.Split(r.URL.Path, "/")
+        contents := getBlob(hash[2])
         fmt.Fprintf(w, "%s", contents)
 }
 
@@ -88,8 +89,8 @@ func docHandler(w http.ResponseWriter, r *http.Request) {
     t, err := template.ParseFiles("index.html")
     check(err)
 
-    urlParts := strings.FieldsFunc(r.URL.Path, forwardSlash)
-    name, err := url.QueryUnescape(urlParts[1])
+    urlParts := strings.Split(r.URL.Path, "/")
+    name, err := url.QueryUnescape(urlParts[2])
 
     doc, err := ioutil.ReadFile(fmt.Sprintf("accounts/default/%s", name))
     check(err)
