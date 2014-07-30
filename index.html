@@ -42,6 +42,15 @@ function loadXMLDoc() {
         }
     }
 
+    window.saveFunc = function() {
+        var i = document.getElementById('contentInput');
+        var el = document.getElementById('content');
+        console.log('heelo', el.innerHTML);
+        i.value = el.innerHTML;
+        document.getElementById('saveForm').submit();
+
+    };
+
     xmlhttp.open("GET", "/docs/", true);
     xmlhttp.send();
 }
@@ -51,12 +60,17 @@ loadXMLDoc();
     </script>
 </head>
 <body>
-<div contenteditable style="font-family: monospace; font-size: 28px;">
-    {{.Content}}
-
-</div>
 <div id="documents"></div>
 
+<div contenteditable id="content" style="font-family: monospace; font-size: 28px;">
+    {{.Content}}
+</div>
+
+<form id="saveForm" action="/save" method="POST">
+    <input type=hidden name="name" value="{{.Name}}"></input>
+    <input id="contentInput" type=hidden name="content" value=""></input>
+</form>
+    <button value="Save document" onclick="saveFunc()"></button>
 <form action="/new" method="POST">
     <input name="name" placeholder="Enter a new document name" type="text"></input>
     <input type="submit"></input>
