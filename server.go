@@ -77,7 +77,7 @@ func docsHandler(w http.ResponseWriter, r *http.Request) {
         }
         b, err := json.Marshal(documents)
         check(err)
-        fmt.Fprintf(w, string(b))
+        fmt.Fprintf(w, "%s", string(b))
 }
 
 func docHandler(w http.ResponseWriter, r *http.Request) {
