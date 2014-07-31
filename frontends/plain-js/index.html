@@ -3,8 +3,64 @@
     <title>Doccer</title>
     <script>
 
-function loadXMLDoc() {
+function Doccer() {
     'use strict';
+
+        this.api = function(endpoint, method, callback, data) {
+            var xhr;
+
+            if (window.XMLHttpRequest) {
+                // code for IE7+, Firefox, Chrome, Opera, Safari
+                xhr = new XMLHttpRequest();
+            } else {
+                // code for IE6, IE5
+                xhr = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 ) {
+                   if(xhr.status == 200){
+                       var resp = JSON.parse(xhr.responseText);
+                       console.log(resp);
+                       callback(resp)
+                   }
+                   else if(xhr.status == 400) {
+                      alert('There was an error 400')
+                   }
+                   else {
+                       alert('something else other than 200 was returned')
+                   }
+                }
+            }
+            xhr.open(method, endpoint, true);
+            if (method.toLowerCase() === 'post') {
+                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                xhr.send(data);
+            } else {
+                xhr.send();
+            }
+        }
+
+        this.newDoc = function(name, callback) {
+            this.api(
+                '/new', 'POST', callback,
+                'name=' + encodeURIComponent(name)
+            )
+        }
+
+        this.save = function(name, content, callback) {
+            this.api(
+                '/save', 'POST', callback,
+                'name=' + encodeURIComponent(name) + '&' + 'content=' + encodeURIComponent(content)
+            )
+        }
+
+        this.listDocs = function(callback) {
+            this.api('/docs', 'GET', callback)
+        }
+}
+
+function loadXMLDoc() {
     var xmlhttp;
 
     if (window.XMLHttpRequest) {
@@ -62,11 +118,9 @@ loadXMLDoc();
 <div id="documents"></div>
 
 <div contenteditable id="content" style="font-family: monospace; font-size: 28px;">
-    {{.Content}}
 </div>
 
 <form id="saveForm" action="/save" method="POST">
-    <input type=hidden name="name" value="{{.Name}}"></input>
     <input id="contentInput" type=hidden name="content" value=""></input>
 </form>
     <button value="Save document" onclick="saveFunc()">Save Current Point</button>
