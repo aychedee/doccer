@@ -45,8 +45,7 @@ function loadXMLDoc() {
     window.saveFunc = function() {
         var i = document.getElementById('contentInput');
         var el = document.getElementById('content');
-        console.log('heelo', el.innerHTML);
-        i.value = el.innerHTML;
+        i.value = el.innerText;
         document.getElementById('saveForm').submit();
 
     };
@@ -70,7 +69,7 @@ loadXMLDoc();
     <input type=hidden name="name" value="{{.Name}}"></input>
     <input id="contentInput" type=hidden name="content" value=""></input>
 </form>
-    <button value="Save document" onclick="saveFunc()"></button>
+    <button value="Save document" onclick="saveFunc()">Save Current Point</button>
 <form action="/new" method="POST">
     <input name="name" placeholder="Enter a new document name" type="text"></input>
     <input type="submit"></input>
