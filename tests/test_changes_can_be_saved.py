@@ -1,5 +1,6 @@
 ## Copyright 2014 Hansel Dunlop. Subject to the GPLv3 license.
 
+import json
 import time
 from integration import DoccerTestCase
 
@@ -46,9 +47,9 @@ class SaveDocumentTest(DoccerTestCase):
         data = dict(name=name, content=content)
         self.api('/save', 'POST', data=data)
 
-        response = self.api('/doc/Latest+doccer+doc', 'GET')
+        response = json.loads(self.api('/doc/Latest+doccer+doc', 'GET'))
 
-        self.assertIn(content, response)
+        self.assertEqual(response['content'], content)
 
     def test_blobs_can_be_retrieved(self):
         name = 'Latest doccer doc'
@@ -60,3 +61,32 @@ class SaveDocumentTest(DoccerTestCase):
         response = self.api('/blob/%s' % (response,), 'GET')
 
         self.assertIn(content, response)
+
+    def test_document_history_is_available(self):
+        name = 'History doccer doc'
+        content = 'Here is some content for the doc\nNoice\n'
+        self.api('/new', 'POST', data=dict(name=name), status_code=301)
+        data = dict(name=name, content=content)
+        self.api('/save', 'POST', data=data)
+        data2 = dict(name=name, content=content + ' Some more content')
+        self.api('/save', 'POST', data=data2)
+
+        data = json.loads(self.api('/doc/History+doccer+doc', 'GET'))
+        print data
+
+        self.assertEqual(data2['content'], data['content'])
+        self.assertEqual(data['name'], 'History doccer doc')
+        self.assertEqual(data['encoded'], 'History+doccer+doc')
+        self.assertEqual(data['history'][0]['hash'], self.EMPTY_HASH)
+        self.assertEqual(
+            data['history'][1]['hash'],
+            'e2c3a5c4570451054eef098a11b9ad10257c8cbe')
+        self.assertEqual(
+            data['history'][2]['hash'],
+            '76bca5ab9ca440fcb16c45755305abdc4d40d3ce')
+        self.assertAlmostEqual(data['history'][0]['ts'],
+                int(time.time()), delta=10)
+        self.assertAlmostEqual(data['history'][1]['ts'],
+                int(time.time()), delta=10)
+        self.assertAlmostEqual(data['history'][2]['ts'],
+                int(time.time()), delta=10)

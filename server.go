@@ -60,24 +60,42 @@ func writeBlob(data string) (stringHash string) {
     return
 }
 
+type History struct {
+    Hash string `json:"hash"`
+    Timestamp int64 `json:"ts"`
+}
+
 type Document struct {
     Name string `json:"name"`
     Encoded string `json:"encoded"`
-    Hash string `json:"hash"`
-    Created int64 `json:"created"`
+    History []History `json:"history"`
+    Content string `json:"content"`
 }
 
-type Content struct {
-    Content string
-    Name string
-}
+func makeDoc(name string) (doc Document) {
+    f, err := os.Open(fmt.Sprintf("accounts/default/%s", name))
+    check(err)
+    defer f.Close()
 
+    history := []History{}
+    scanner := bufio.NewScanner(f)
+    for scanner.Scan() {
+        parts := strings.Split(strings.Trim(scanner.Text(), " \n"), " ")
+        ts, err := strconv.ParseInt(parts[1], 10, 64)
+        check(err)
+        hist := History{parts[0], ts}
+        history = append(history, hist)
+
+    }
+    escaped := url.QueryEscape(name)
+    doc = Document{name, escaped, history, ""}
+    return
+}
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-    t, err := template.ParseFiles("index.html")
+    t, err := template.ParseFiles("frontends/plain-js/index.html")
     check(err)
-    content := Content{"You can start by editing this...", "None"}
-    t.Execute(w, content)
+    t.Execute(w, "")
 
 }
 
@@ -88,44 +106,31 @@ func blobHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func docsHandler(w http.ResponseWriter, r *http.Request) {
-        documents := []Document{}
+        docs:= []Document{}
         contents, err := ioutil.ReadDir("accounts/default")
         check(err)
         for _, f := range contents {
-            fi, err := os.Open(fmt.Sprintf("accounts/default/%s", f.Name()))
-            check(err)
-            defer fi.Close()
-            scanner := bufio.NewScanner(fi)
-            for scanner.Scan() {
-                fields := strings.Fields(scanner.Text())
-                ts, err := strconv.ParseInt(fields[1], 10, 64)
-                check(err)
-                escaped := url.QueryEscape(f.Name())
-
-                document := Document{f.Name(), escaped, fields[0], ts}
-                documents = append(documents, document)
-            }
+            doc := makeDoc(f.Name())
+            docs = append(docs, doc)
         }
-        b, err := json.Marshal(documents)
+        b, err := json.Marshal(docs)
         check(err)
         fmt.Fprintf(w, "%s", string(b))
 }
 
 func docHandler(w http.ResponseWriter, r *http.Request) {
-    t, err := template.ParseFiles("index.html")
-    check(err)
-
     parts := splitUrl(r.URL.Path)
     name, err := url.QueryUnescape(parts[1])
+    check(err)
 
-    history := docHistory(name)
+    doc := makeDoc(name)
 
-    last := history[len(history)-2]
-    fields := strings.Fields(last)
+    last := doc.History[len(doc.History)-1].Hash
 
-    latest := getBlob(fields[0])
-    content := Content{string(latest), name}
-    t.Execute(w, content)
+    doc.Content = string(getBlob(last))
+    b, err := json.Marshal(doc)
+    check(err)
+    fmt.Fprintf(w, "%s", string(b))
 }
 
 func saveHandler(w http.ResponseWriter, r *http.Request) {
