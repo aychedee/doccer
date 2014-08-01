@@ -11,8 +11,8 @@ class ListDocsTest(DoccerTestCase):
     def test_documents_can_be_listed(self):
         name1 = 'A doccer document'
         name2 = 'My second+'
-        self.api('/new', 'POST', data=dict(name=name1), status_code=301)
-        self.api('/new', 'POST', data=dict(name=name2), status_code=301)
+        self.api('/save', 'POST', data=dict(name=name1))
+        self.api('/save', 'POST', data=dict(name=name2))
 
         data = json.loads(self.api('/docs/', 'GET'))
 

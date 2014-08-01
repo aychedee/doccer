@@ -11,8 +11,8 @@ class UnicodeTest(DoccerTestCase):
     def test_document_list_with_unicode(self):
         name1 = u'☠   ⚓'
         name2 = u'⚓⚓⚓'
-        self.api('/new', 'POST', data=dict(name=name1), status_code=301)
-        self.api('/new', 'POST', data=dict(name=name2), status_code=301)
+        self.api('/save', 'POST', data=dict(name=name1))
+        self.api('/save', 'POST', data=dict(name=name2))
 
         data = json.loads(self.api('/docs/', 'GET'))
 
