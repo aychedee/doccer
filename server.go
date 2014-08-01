@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"crypto/sha1"
 	"encoding/json"
+    "errors"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -36,10 +37,11 @@ func docHistory(name string) (history []string) {
 	return
 }
 
-func getBlob(hash string) (contents []byte) {
-    // TODO write test, what happens if content does not exist
-	contents, err := ioutil.ReadFile(fmt.Sprintf("content/%s", hash))
-	check(err)
+func getBlob(hash string) (contents []byte, err error) {
+	contents, e := ioutil.ReadFile(fmt.Sprintf("content/%s", hash))
+	if e != nil {
+        err = errors.New("No such blob")
+    }
 	return
 }
 
@@ -102,7 +104,8 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 
 func blobHandler(w http.ResponseWriter, r *http.Request) {
 	parts := splitUrl(r.URL.Path)
-	contents := getBlob(parts[1])
+	contents, err := getBlob(parts[1])
+    check(err)
 	fmt.Fprintf(w, "%s", contents)
 }
 
@@ -126,7 +129,9 @@ func docHandler(w http.ResponseWriter, r *http.Request) {
 
 	doc := makeDoc(name)
 	last := doc.History[len(doc.History)-1].Hash
-	doc.Content = string(getBlob(last))
+	content, err := getBlob(last)
+    check(err)
+	doc.Content = string(content)
 
 	b, err := json.Marshal(doc)
 	check(err)
@@ -168,7 +173,9 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 
         doc := makeDoc(name)
         last := doc.History[len(doc.History)-1].Hash
-        doc.Content = string(getBlob(last))
+        blob, err := getBlob(last)
+        check(err)
+        doc.Content = string(blob)
 
         b, err := json.Marshal(doc)
         check(err)
