@@ -58,6 +58,14 @@ function Doccer() {
         this.listDocs = function(callback) {
             this.api('/docs', 'GET', callback)
         }
+
+        this.getDoc = function(name, callback) {
+            this.api('/doc/' + encodeURIComponent(name), 'GET', callback)
+        }
+
+        this.getBlob = function(hash, callback) {
+            this.api('/blob/' + hash, callback)
+        }
 }
 
 function loadXMLDoc() {
