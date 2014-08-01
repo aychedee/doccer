@@ -51,7 +51,7 @@ oldest blob by making a GET request to
 JavaScript API
 --------------
 
-The JavaScript API makes implemting a web based frontend very simple.
+The JavaScript API makes implementing a web based frontend very simple.
 
     doccer = new Doccer()
 
