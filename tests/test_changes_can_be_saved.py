@@ -24,7 +24,7 @@ class SaveDocumentTest(DoccerTestCase):
             first_save, second_save, _ = contents.split('\n')
             self.assertEqual(
                 first_save.split()[0],
-                self.EMPTY_HASH
+                '13cb80d32f4ce1c32da7fab8df5d6ae629a665a8'
             )
             self.assertAlmostEqual(
                 int(first_save.split()[1]),
@@ -32,7 +32,7 @@ class SaveDocumentTest(DoccerTestCase):
             )
             self.assertEqual(
                 second_save.split()[0],
-                'e2c3a5c4570451054eef098a11b9ad10257c8cbe'
+                '39fa695bc6ad917122ca44da375466515fbfc0ed'
             )
             self.assertAlmostEqual(
                 int(second_save.split()[1]),
@@ -55,8 +55,10 @@ class SaveDocumentTest(DoccerTestCase):
         content = 'Here is some content for the doc\nNoice\n'
         data = dict(name=name, content=content)
         history = json.loads(self.api('/save', 'POST', data=data))['history']
-
         response = self.api('/blob/%s' % (history[0]['hash'],), 'GET')
+        content_hash = response.split()[-1]
+
+        response = self.api('/blob/%s' % (content_hash,), 'GET')
 
         self.assertIn(content, response)
 
@@ -75,13 +77,14 @@ class SaveDocumentTest(DoccerTestCase):
         self.assertEqual(data2['content'], data['content'])
         self.assertEqual(data['name'], 'History doccer doc')
         self.assertEqual(data['encoded'], 'History+doccer+doc')
-        self.assertEqual(data['history'][0]['hash'], self.EMPTY_HASH)
+        self.assertEqual(data['history'][0]['hash'],
+            '13cb80d32f4ce1c32da7fab8df5d6ae629a665a8')
         self.assertEqual(
             data['history'][1]['hash'],
-            'e2c3a5c4570451054eef098a11b9ad10257c8cbe')
+            '39fa695bc6ad917122ca44da375466515fbfc0ed')
         self.assertEqual(
             data['history'][2]['hash'],
-            '76bca5ab9ca440fcb16c45755305abdc4d40d3ce')
+            '40514713c89982b21804e120dda2f2673ca5c333')
         self.assertAlmostEqual(data['history'][0]['ts'],
                 int(time.time()), delta=10)
         self.assertAlmostEqual(data['history'][1]['ts'],

@@ -5,7 +5,7 @@ import (
 	"bufio"
 	"crypto/sha1"
 	"encoding/json"
-    "errors"
+	"errors"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -40,8 +40,8 @@ func docHistory(name string) (history []string) {
 func getBlob(hash string) (contents []byte, err error) {
 	contents, e := ioutil.ReadFile(fmt.Sprintf("content/%s", hash))
 	if e != nil {
-        err = errors.New("No such blob")
-    }
+		err = errors.New("No such blob")
+	}
 	return
 }
 
@@ -95,6 +95,16 @@ func makeDoc(name string) (doc Document) {
 	return
 }
 
+func parseCommit(commit string) (commitMap map[string]string) {
+	lines := strings.Split(strings.Trim(string(commit), "\n "), "\n")
+	commitMap = make(map[string]string)
+	for i := 0; i < len(lines); i++ {
+		parts := strings.SplitN(lines[i], " ", 2)
+		commitMap[parts[0]] = parts[1]
+	}
+	return
+}
+
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles("frontends/plain-js/index.html")
 	check(err)
@@ -105,7 +115,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 func blobHandler(w http.ResponseWriter, r *http.Request) {
 	parts := splitUrl(r.URL.Path)
 	contents, err := getBlob(parts[1])
-    check(err)
+	check(err)
 	fmt.Fprintf(w, "%s", contents)
 }
 
@@ -128,10 +138,13 @@ func docHandler(w http.ResponseWriter, r *http.Request) {
 	check(err)
 
 	doc := makeDoc(name)
-	last := doc.History[len(doc.History)-1].Hash
-	content, err := getBlob(last)
-    check(err)
-	doc.Content = string(content)
+	commit := doc.History[len(doc.History)-1].Hash
+	cContent, err := getBlob(commit)
+	check(err)
+	c := parseCommit(string(cContent))
+	cont, err := getBlob(c["content"])
+	check(err)
+	doc.Content = string(cont)
 
 	b, err := json.Marshal(doc)
 	check(err)
@@ -148,7 +161,15 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 		if val, ok := r.Form["content"]; ok {
 			content = val[0]
 		}
+		parent := ""
+		if val, ok := r.Form["parent"]; ok {
+			parent = val[0]
+		}
 		hash := writeBlob(content)
+
+		cHash := writeBlob(
+			fmt.Sprintf(
+				"committer %s\nparent %s\ncontent %s\n", "", parent, hash))
 
 		fileName := fmt.Sprintf("accounts/default/%s", name)
 
@@ -166,22 +187,22 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		updated := time.Now().Unix()
-		_, err = f.WriteString(fmt.Sprintf("%s %d\n", hash, updated))
+		_, err = f.WriteString(fmt.Sprintf("%s %d\n", cHash, updated))
 		check(err)
 
 		f.Sync()
 
-        doc := makeDoc(name)
-        last := doc.History[len(doc.History)-1].Hash
-        blob, err := getBlob(last)
-        check(err)
-        doc.Content = string(blob)
+		doc := makeDoc(name)
+		last := doc.History[len(doc.History)-1].Hash
+		blob, err := getBlob(last)
+		check(err)
+		doc.Content = string(blob)
 
-        b, err := json.Marshal(doc)
-        check(err)
-        fmt.Fprintf(w, "%s", string(b))
+		b, err := json.Marshal(doc)
+		check(err)
+		fmt.Fprintf(w, "%s", string(b))
 	} else {
-        w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "<html><title>Error :: Doccer</title></html>")
 	}
 }
@@ -201,6 +222,7 @@ func main() {
 	}
 
 	http.HandleFunc("/", rootHandler)
+	http.HandleFunc("/d/", rootHandler)
 	http.HandleFunc("/docs/", docsHandler)
 	http.HandleFunc("/blob/", blobHandler)
 	http.HandleFunc("/save", saveHandler)

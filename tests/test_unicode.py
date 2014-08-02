@@ -19,8 +19,10 @@ class UnicodeTest(DoccerTestCase):
         self.assertEqual(data[0]['name'], name1)
         self.assertEqual(data[0]['encoded'], u'%E2%98%A0+++%E2%9A%93')
         self.assertEqual(
-            data[0]['history'][0]['hash'], self.EMPTY_HASH)
+            data[0]['history'][0]['hash'],
+            '13cb80d32f4ce1c32da7fab8df5d6ae629a665a8')
         self.assertEqual(data[1]['name'], name2)
         self.assertEqual(data[1]['encoded'], u'%E2%9A%93%E2%9A%93%E2%9A%93')
         self.assertEqual(
-            data[1]['history'][0]['hash'], self.EMPTY_HASH)
+            data[1]['history'][0]['hash'],
+            '13cb80d32f4ce1c32da7fab8df5d6ae629a665a8')
