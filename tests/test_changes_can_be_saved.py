@@ -1,5 +1,6 @@
 ## Copyright 2014 Hansel Dunlop. Subject to the GPLv3 license.
 
+from datetime import datetime
 import json
 import time
 from integration import DoccerTestCase
@@ -85,9 +86,15 @@ class SaveDocumentTest(DoccerTestCase):
         self.assertEqual(
             data['history'][2]['hash'],
             '40514713c89982b21804e120dda2f2673ca5c333')
-        self.assertAlmostEqual(data['history'][0]['ts'],
-                int(time.time()), delta=10)
-        self.assertAlmostEqual(data['history'][1]['ts'],
-                int(time.time()), delta=10)
-        self.assertAlmostEqual(data['history'][2]['ts'],
-                int(time.time()), delta=10)
+        self.assertEqual(
+            data['history'][0]['ts'][:16],
+            datetime.utcnow().strftime("%Y-%m-%dT%H:%M")
+        )
+        self.assertEqual(
+            data['history'][1]['ts'][:16],
+            datetime.utcnow().strftime("%Y-%M-%dT%H:%M")
+        )
+        self.assertEqual(
+            data['history'][2]['ts'][:17],
+            datetime.utcnow().strftime("%Y-%M-%dT%H:%M")
+        )

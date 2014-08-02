@@ -64,8 +64,8 @@ func writeBlob(data string) (stringHash string) {
 }
 
 type History struct {
-	Hash      string `json:"hash"`
-	Timestamp int64  `json:"ts"`
+	Hash      string    `json:"hash"`
+	Timestamp time.Time `json:"ts"`
 }
 
 type Document struct {
@@ -86,7 +86,8 @@ func makeDoc(name string) (doc Document) {
 		parts := strings.Split(strings.Trim(scanner.Text(), " \n"), " ")
 		ts, err := strconv.ParseInt(parts[1], 10, 64)
 		check(err)
-		hist := History{parts[0], ts}
+		date := time.Unix(0, ts)
+		hist := History{parts[0], date}
 		history = append(history, hist)
 
 	}
@@ -186,7 +187,7 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 			check(err)
 		}
 
-		updated := time.Now().Unix()
+		updated := time.Now().UnixNano()
 		_, err = f.WriteString(fmt.Sprintf("%s %d\n", cHash, updated))
 		check(err)
 
