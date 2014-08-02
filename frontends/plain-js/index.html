@@ -66,60 +66,63 @@ function Doccer() {
         this.getBlob = function(hash, callback) {
             this.api('/blob/' + hash, callback)
         }
-}
 
-function loadXMLDoc() {
-    var xmlhttp;
+        function Doc(doc, doccer) {
+            this.name = doc.name;
+            this.doccer = doccer
+            this.encoded = doc.encoded;
+            this.history = [];
+            this.position = doc.history.length;
+            for (var i=0; i < doc.history.length; i++) {
+                this.history.push({
+                    date: new Date(doc.history[i].ts),
+                    hash: doc.history[i].hash,
+                    content: ''
+                });
+            }
+            this.history[position].content = doc.content;
 
-    if (window.XMLHttpRequest) {
-        // code for IE7+, Firefox, Chrome, Opera, Safari
-        xmlhttp = new XMLHttpRequest();
-    } else {
-        // code for IE6, IE5
-        xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-    }
+            this.content = function() {
+                return this.history[position].content;
+            }
 
-    xmlhttp.onreadystatechange = function() {
-        if (xmlhttp.readyState == 4 ) {
-           if(xmlhttp.status == 200){
-               var docs = document.getElementById("documents");
-               var resp = JSON.parse(xmlhttp.responseText);
-               console.log(resp);
-               for (var i=0; i < resp.length; i++) {
-                   var link = document.createElement('a');
-                   link.setAttribute('href', '/doc/' + resp[i].encoded);
-                   var el = document.createElement('button');
-                   link.appendChild(el);
-                   el.innerText = resp[i].name;
-                   el.id = resp[i].hash;
-                   docs.appendChild(link);
+            this.back = function(callback) {
+                if (this.position <= 0) {
+                    return false
+                } else {
+                    this.position--;
+                    this.doccer.api.getBlob(
+                        this.history[this.position].hash,
+                        function(resp) {console.log(resp);}
+                    );
 
-                   console.log(resp[i]);
-               }
-           }
-           else if(xmlhttp.status == 400) {
-              alert('There was an error 400')
-           }
-           else {
-               alert('something else other than 200 was returned')
-           }
+                }
+
+            };
+
+
         }
-    }
 
-    window.saveFunc = function() {
-        var i = document.getElementById('contentInput');
-        var el = document.getElementById('content');
-        i.value = el.innerText;
-        document.getElementById('saveForm').submit();
+        this.Doc = Doc;
 
-    };
-
-    xmlhttp.open("GET", "/docs/", true);
-    xmlhttp.send();
 }
 
-loadXMLDoc();
 
+var doccer = new Doccer();
+doccer.listDocs(function(resp) {
+    var docs = document.getElementById('documents');
+       for (var i=0; i < resp.length; i++) {
+           var link = document.createElement('a');
+           link.setAttribute('href', '/d/' + resp[i].encoded);
+           var el = document.createElement('button');
+           link.appendChild(el);
+           el.innerText = resp[i].name;
+           el.id = resp[i].hash;
+           docs.appendChild(link);
+
+           console.log(resp[i]);
+       }
+});
     </script>
 </head>
 <body>
