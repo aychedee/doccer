@@ -87,7 +87,7 @@ func makeDoc(name string) (doc Document) {
 		ts, err := strconv.ParseInt(parts[1], 10, 64)
 		check(err)
 		date := time.Unix(0, ts)
-		hist := History{parts[0], date}
+		hist := History{parts[0], date.UTC()}
 		history = append(history, hist)
 
 	}

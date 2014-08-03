@@ -29,7 +29,7 @@ class SaveDocumentTest(DoccerTestCase):
             )
             self.assertAlmostEqual(
                 int(first_save.split()[1]),
-                int(time.time()), delta=10
+                int(time.time() * 1000000000), delta=1000000000
             )
             self.assertEqual(
                 second_save.split()[0],
@@ -37,7 +37,7 @@ class SaveDocumentTest(DoccerTestCase):
             )
             self.assertAlmostEqual(
                 int(second_save.split()[1]),
-                int(time.time()), delta=10
+                int(time.time() * 1000000000), delta=1000000000
             )
 
     def test_latest_version_of_doc_content_is_returned(self):
@@ -92,9 +92,9 @@ class SaveDocumentTest(DoccerTestCase):
         )
         self.assertEqual(
             data['history'][1]['ts'][:16],
-            datetime.utcnow().strftime("%Y-%M-%dT%H:%M")
+            datetime.utcnow().strftime("%Y-%m-%dT%H:%M")
         )
         self.assertEqual(
-            data['history'][2]['ts'][:17],
-            datetime.utcnow().strftime("%Y-%M-%dT%H:%M")
+            data['history'][2]['ts'][:16],
+            datetime.utcnow().strftime("%Y-%m-%dT%H:%M")
         )
