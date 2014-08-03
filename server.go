@@ -222,11 +222,15 @@ func main() {
 		port = givenPort
 	}
 
+	staticHandler := http.FileServer(http.Dir("static_path"))
+
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/d/", rootHandler)
 	http.HandleFunc("/docs/", docsHandler)
 	http.HandleFunc("/blob/", blobHandler)
 	http.HandleFunc("/save", saveHandler)
 	http.HandleFunc("/doc/", docHandler)
+	http.Handle("/static/", staticHandler)
+
 	http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil)
 }
