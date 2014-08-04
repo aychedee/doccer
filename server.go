@@ -76,6 +76,7 @@ type Document struct {
 }
 
 func makeDoc(name string) (doc Document) {
+	// TODO unit test for the case where  this file doesn't exist
 	f, err := os.Open(fmt.Sprintf("accounts/default/%s", name))
 	check(err)
 	defer f.Close()
@@ -135,11 +136,18 @@ func docsHandler(w http.ResponseWriter, r *http.Request) {
 
 func docHandler(w http.ResponseWriter, r *http.Request) {
 	parts := splitUrl(r.URL.Path)
+
 	name, err := url.QueryUnescape(parts[1])
 	check(err)
 
 	doc := makeDoc(name)
-	commit := doc.History[len(doc.History)-1].Hash
+	var commit string
+	// Get commit from url if availble or use the latest
+	if len(parts) == 3 {
+		commit = parts[2]
+	} else {
+		commit = doc.History[len(doc.History)-1].Hash
+	}
 	cContent, err := getBlob(commit)
 	check(err)
 	c := parseCommit(string(cContent))
@@ -232,5 +240,6 @@ func main() {
 	http.HandleFunc("/doc/", docHandler)
 	http.Handle("/static/", staticHandler)
 
-	http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil)
+	http.ListenAndServe(fmt.Sprintf("%s:%d", address, port),
+		nil)
 }

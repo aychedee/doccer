@@ -98,3 +98,35 @@ class SaveDocumentTest(DoccerTestCase):
             data['history'][2]['ts'][:16],
             datetime.utcnow().strftime("%Y-%m-%dT%H:%M")
         )
+
+    def test_documents_can_be_retreived_by_commit_hash(self):
+        name = 'Commit points doc'
+        content = 'Here is some content for the doc\nNoice\n'
+        self.api('/save', 'POST', data=dict(name=name))
+        data1 = dict(name=name, content=content)
+        self.api('/save', 'POST', data=data1)
+        data2 = dict(name=name, content=content + ' Some more content')
+        self.api('/save', 'POST', data=data2)
+
+        data = json.loads(
+            self.api('/doc/History+doccer+doc/\
+13cb80d32f4ce1c32da7fab8df5d6ae629a665a8',
+            'GET'))
+        print data
+
+        self.assertEqual('', data['content'])
+
+        data = json.loads(
+            self.api('/doc/History+doccer+doc/\
+39fa695bc6ad917122ca44da375466515fbfc0ed',
+            'GET'))
+        print data
+
+        self.assertEqual(data1['content'], data['content'])
+
+        data = json.loads(
+            self.api('/doc/History+doccer+doc/\
+40514713c89982b21804e120dda2f2673ca5c333',
+            'GET'))
+
+        self.assertEqual(data2['content'], data['content'])

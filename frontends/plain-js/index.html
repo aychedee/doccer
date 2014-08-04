@@ -37,13 +37,13 @@ function Doccer() {
                    if(xhr.status == 200){
                        var resp = JSON.parse(xhr.responseText);
                        console.log(resp);
-                       callback(resp)
+                       callback(resp);
                    }
                    else if(xhr.status == 400) {
-                      alert('There was an error 400')
+                      console.log('There was an error 400')
                    }
                    else {
-                       alert('something else other than 200 was returned')
+                       console.log('xhr.status was ' + xhr.status)
                    }
                 }
             }
@@ -74,8 +74,13 @@ function Doccer() {
             this.api('/docs', 'GET', callback)
         }
 
-        this.getDoc = function(name, callback) {
-            this.api('/doc/' + encodeURIComponent(name), 'GET', callback)
+        this.getDoc = function(name, cHash, callback) {
+            console.log('Callback', callback, 'Name', name)
+            var cb = function(callback, resp) {
+                this.doc = new this.Doc(resp);
+                return callback(resp);
+            }
+            this.api('/doc/' + encodeURIComponent(name) + '/' + cHash, 'GET', cb.bind(this, callback))
         }
 
         this.getBlob = function(hash, callback) {
@@ -84,7 +89,8 @@ function Doccer() {
 
         function Doc(doc, doccer) {
             this.name = doc.name;
-            this.doccer = doccer
+            this.doccer = doccer;
+            this.content = doc.content;
             this.encoded = doc.encoded;
             this.history = [];
             this.position = doc.history.length;
@@ -95,27 +101,6 @@ function Doccer() {
                     content: ''
                 });
             }
-            this.history[position].content = doc.content;
-
-            this.content = function() {
-                return this.history[position].content;
-            }
-
-            this.back = function(callback) {
-                if (this.position <= 0) {
-                    return false
-                } else {
-                    this.position--;
-                    this.doccer.api.getBlob(
-                        this.history[this.position].hash,
-                        function(resp) {console.log(resp);}
-                    );
-
-                }
-
-            };
-
-
         }
 
         this.Doc = Doc;
@@ -123,7 +108,56 @@ function Doccer() {
 }
 
 
+function FrontEnd(domElement, doccer) {
+
+
+    this.el = domElement;
+    this.doccer = doccer;
+
+    this.init = function() {
+        var commitHash = '';
+        if (window.location.pathname.indexOf('/d/') === 0) {
+            var parts = window.location.pathname.split('/');
+            var encodedName = parts[2];
+            if (parts.length > 3) {
+                var commitHash = parts[3];
+            }
+            var cb = this.setState.bind(this);
+
+
+            console.log('parts', parts)
+            console.log('decode', encodedName)
+            this.doccer.getDoc(
+                decodeURIComponent(encodedName.replace('+', ' ')), commitHash, cb)
+        }
+    };
+
+    this.setState = function(doc) {
+        var editor = document.getElementById('content');
+        editor.innerHTML = doc.content;
+        window.history.pushState({}, '', '/d/' + doc.encoded + '/' + doc.history[doc.history.length-1].hash)
+    }
+
+    this.changeToDoc = function(name) {
+        var boundCB = this.setState.bind(this)
+        this.doccer.getDoc(name, '', boundCB)
+    }
+
+    this.save = function() {
+        var editor = document.getElementById('content');
+        this.doccer.save(doccer.doc.name, editor.innerHTML, function() {
+            console.log('Saved', doccer.doc.name, editor.innerHTML);
+        });
+
+    }
+
+}
+
+
+
 var doccer = new Doccer();
+var frontend = new FrontEnd('', doccer);
+frontend.init();
 doccer.listDocs(function(resp) {
     var docs = document.getElementById('documents');
        for (var i=0; i < resp.length; i++) {
@@ -132,10 +166,10 @@ doccer.listDocs(function(resp) {
            var el = document.createElement('button');
            link.appendChild(el);
            el.innerText = resp[i].name;
+           el.onclick = frontend.changeToDoc.bind(frontend, resp[i].name)
            el.id = resp[i].hash;
            docs.appendChild(link);
 
-           console.log(resp[i]);
        }
 });
     </script>
@@ -149,7 +183,7 @@ doccer.listDocs(function(resp) {
 <form id="saveForm" action="/save" method="POST">
     <input id="contentInput" type=hidden name="content" value=""></input>
 </form>
-    <button value="Save document" onclick="saveFunc()">Save Current Point</button>
+    <button value="Save document" onclick="frontend.save()">Save Current Point</button>
 <form action="/save" method="POST">
     <input name="name" placeholder="Enter a new document name" type="text"></input>
     <input type="submit"></input>
