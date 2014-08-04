@@ -136,6 +136,15 @@ function FrontEnd(domElement, doccer) {
         var editor = document.getElementById('content');
         editor.innerHTML = doc.content;
         window.history.pushState({}, '', '/d/' + doc.encoded + '/' + doc.history[doc.history.length-1].hash)
+        for (var i=0; i < doc.history.length; i++) {
+            var docs = document.getElementById('documents');
+            var link = document.createElement('a');
+            link.setAttribute('href', '/d/' + doc.encoded + '/' + doc.history[i].hash);
+            var el = document.createElement('button');
+            link.appendChild(el);
+            el.innerText = doc.history[i].ts;
+            docs.appendChild(link);
+        }
     }
 
     this.changeToDoc = function(name) {
