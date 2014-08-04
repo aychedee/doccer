@@ -16,6 +16,48 @@
     <link rel="icon" type="image/png" href="/static/favicon-32x32.png" sizes="32x32">
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="msapplication-TileImage" content="/static/mstile-144x144.png">
+
+    <style>
+
+
+    html, body { padding: 0px; margin: 0px; height: 100%; text-align: center; }
+    .contents { height: 100%; width: 100%; margin-left: auto;
+                             margin-right: auto; text-align: left; }
+    #documents { float: left; width: 15%; min-height: 100%; background:#4b805b; }
+
+    #documents ul li {
+        width: 100%;
+        text-align: left;
+        list-style-type: none;
+    }
+
+    #content {
+        text-align: left;
+
+    }
+
+    #editor {
+        padding: 2em;
+        padding-bottom: 0em;
+        min-height: 100%;
+        padding-left: 12em;
+
+    }
+
+    #editor:focus {
+        outline: none;
+    }
+
+
+    #timeline {
+        background: green;
+        margin: 0px;
+        padding: 0px;
+    }
+
+
+    </style>
+
     <script>
 
 function Doccer() {
@@ -133,11 +175,11 @@ function FrontEnd(domElement, doccer) {
     };
 
     this.setState = function(doc) {
-        var editor = document.getElementById('content');
+        var editor = document.getElementById('editor');
         editor.innerHTML = doc.content;
         window.history.pushState({}, '', '/d/' + doc.encoded + '/' + doc.history[doc.history.length-1].hash)
         for (var i=0; i < doc.history.length; i++) {
-            var docs = document.getElementById('documents');
+            var docs = document.getElementById('timeline');
             var link = document.createElement('a');
             link.setAttribute('href', '/d/' + doc.encoded + '/' + doc.history[i].hash);
             var el = document.createElement('button');
@@ -153,7 +195,7 @@ function FrontEnd(domElement, doccer) {
     }
 
     this.save = function() {
-        var editor = document.getElementById('content');
+        var editor = document.getElementById('editor');
         this.doccer.save(doccer.doc.name, editor.innerHTML, function() {
             console.log('Saved', doccer.doc.name, editor.innerHTML);
         });
@@ -168,15 +210,15 @@ var doccer = new Doccer();
 var frontend = new FrontEnd('', doccer);
 frontend.init();
 doccer.listDocs(function(resp) {
-    var docs = document.getElementById('documents');
+    var docs = document.getElementById('doc-list');
        for (var i=0; i < resp.length; i++) {
            var link = document.createElement('a');
            link.setAttribute('href', '/d/' + resp[i].encoded);
-           var el = document.createElement('button');
-           link.appendChild(el);
-           el.innerText = resp[i].name;
-           el.onclick = frontend.changeToDoc.bind(frontend, resp[i].name)
-           el.id = resp[i].hash;
+           var li = document.createElement('li');
+           link.appendChild(li);
+           li.innerText = resp[i].name;
+           li.onclick = frontend.changeToDoc.bind(frontend, resp[i].name)
+           li.id = resp[i].hash;
            docs.appendChild(link);
 
        }
@@ -184,18 +226,29 @@ doccer.listDocs(function(resp) {
     </script>
 </head>
 <body>
-<div id="documents"></div>
 
-<div contenteditable id="content" style="font-family: monospace; font-size: 28px;">
+<div class="content">
+    <div id="documents"><ul id="doc-list"></ul>
+
+    <form id="saveForm" action="/save" method="POST">
+        <input id="contentInput" type=hidden name="content" value=""></input>
+    </form>
+        <button value="Save document" onclick="frontend.save()">Save Current Point</button>
+    <form action="/save" method="POST">
+        <input name="name" placeholder="Enter a new document name" type="text"></input>
+        <input type="submit"></input>
+    </form>
+
+    </div>
+
+    <div id="content">
+        <div contenteditable id="editor" style="font-family: monospace; font-size: 28px;"></div>
+
+        <div id="timeline"></div>
+    </div>
+
+
 </div>
 
-<form id="saveForm" action="/save" method="POST">
-    <input id="contentInput" type=hidden name="content" value=""></input>
-</form>
-    <button value="Save document" onclick="frontend.save()">Save Current Point</button>
-<form action="/save" method="POST">
-    <input name="name" placeholder="Enter a new document name" type="text"></input>
-    <input type="submit"></input>
-</form>
 </body>
 </html>
