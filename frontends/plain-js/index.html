@@ -37,10 +37,11 @@
     }
 
     #editor {
-        padding: 2em;
-        padding-bottom: 0em;
+        padding: 0em;
         min-height: 100%;
-        padding-left: 12em;
+        height: auto;
+        padding-left: 2em;
+        overflow-y: scroll;
 
     }
 
@@ -206,22 +207,26 @@ function FrontEnd(domElement, doccer) {
 
 
 
-var doccer = new Doccer();
-var frontend = new FrontEnd('', doccer);
-frontend.init();
-doccer.listDocs(function(resp) {
-    var docs = document.getElementById('doc-list');
-       for (var i=0; i < resp.length; i++) {
-           var link = document.createElement('a');
-           link.setAttribute('href', '/d/' + resp[i].encoded);
-           var li = document.createElement('li');
-           link.appendChild(li);
-           li.innerText = resp[i].name;
-           li.onclick = frontend.changeToDoc.bind(frontend, resp[i].name)
-           li.id = resp[i].hash;
-           docs.appendChild(link);
+window.addEventListener('load', function(e) {
+    var editor = document.getElementById('editor');
+    editor.style.height = window.innerHeight - 50;
+    window.doccer = new Doccer();
+    window.frontend = new FrontEnd('', doccer);
+    window.frontend.init();
+    doccer.listDocs(function(resp) {
+        var docs = document.getElementById('doc-list');
+           for (var i=0; i < resp.length; i++) {
+               var link = document.createElement('a');
+               link.setAttribute('href', '/d/' + resp[i].encoded);
+               var li = document.createElement('li');
+               link.appendChild(li);
+               li.innerText = resp[i].name;
+               li.onclick = frontend.changeToDoc.bind(frontend, resp[i].name)
+               li.id = resp[i].hash;
+               docs.appendChild(link);
 
-       }
+           }
+    });
 });
     </script>
 </head>
