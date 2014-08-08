@@ -162,10 +162,11 @@ function FrontEnd(domElement, doccer) {
         if (window.location.pathname.indexOf('/d/') === 0) {
             var parts = window.location.pathname.split('/');
             var encodedName = parts[2];
+            var commitHash = '';
             if (parts.length > 3) {
                 var commitHash = parts[3];
             }
-            var cb = this.setState.bind(this);
+            var cb = this.setState.bind(this, commitHash);
 
 
             console.log('parts', parts)
@@ -175,24 +176,23 @@ function FrontEnd(domElement, doccer) {
         }
     };
 
-    this.setState = function(doc) {
+    this.setState = function(cHash, doc) {
+        console.log(cHash, doc);
         var editor = document.getElementById('editor');
         editor.innerHTML = doc.content;
-        window.history.pushState({}, '', '/d/' + doc.encoded + '/' + doc.history[doc.history.length-1].hash)
+        window.history.pushState({}, '', '/d/' + doc.encoded + '/' + cHash)
         for (var i=0; i < doc.history.length; i++) {
             var docs = document.getElementById('timeline');
-            var link = document.createElement('a');
-            link.setAttribute('href', '/d/' + doc.encoded + '/' + doc.history[i].hash);
             var el = document.createElement('button');
-            link.appendChild(el);
+            el.onclick = this.changeToDoc.bind(this, doc.name, doc.history[i].hash);
             el.innerText = doc.history[i].ts;
-            docs.appendChild(link);
+            docs.appendChild(el);
         }
     }
 
-    this.changeToDoc = function(name) {
-        var boundCB = this.setState.bind(this)
-        this.doccer.getDoc(name, '', boundCB)
+    this.changeToDoc = function(name, cHash) {
+        var boundCB = this.setState.bind(this, cHash)
+        this.doccer.getDoc(name, cHash, boundCB)
     }
 
     this.save = function() {
@@ -216,12 +216,13 @@ window.addEventListener('load', function(e) {
     doccer.listDocs(function(resp) {
         var docs = document.getElementById('doc-list');
            for (var i=0; i < resp.length; i++) {
+               var doc = resp[i];
+               console.log(doc);
                var link = document.createElement('a');
-               link.setAttribute('href', '/d/' + resp[i].encoded);
+               link.setAttribute('href', '/d/' + doc.encoded);
                var li = document.createElement('li');
                link.appendChild(li);
-               li.innerText = resp[i].name;
-               li.onclick = frontend.changeToDoc.bind(frontend, resp[i].name)
+               li.innerText = doc.name;
                li.id = resp[i].hash;
                docs.appendChild(link);
 
