@@ -9,7 +9,7 @@ clean:
 	rm doccer
 
 rmproject:
-	rm accounts; rm content
+	rm -rf accounts; rm -rf content
 
 integration: 
 	nosetests
