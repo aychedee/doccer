@@ -219,6 +219,12 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	var address string = "127.0.0.1"
 	var port int = 4121
+    if _, err := os.Stat("content"); err != nil {
+        if os.IsNotExist(err) {
+            err := os.Mkdir("content", 0744)
+            check(err)
+        }
+    }
 
 	if len(os.Args) > 2 {
 		address = os.Args[1]
