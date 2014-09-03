@@ -216,14 +216,25 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func mkdirIfNotExists(path string) (e error) {
+    if _, err := os.Stat(path); err != nil {
+        if os.IsNotExist(err) {
+            e = os.MkdirAll(path, 0744)
+        }
+    }
+    return e
+
+
+}
+
 func main() {
 	var address string = "127.0.0.1"
 	var port int = 4121
-    if _, err := os.Stat("content"); err != nil {
-        if os.IsNotExist(err) {
-            err := os.Mkdir("content", 0744)
-            check(err)
-        }
+    if err := mkdirIfNotExists("content"); err != nil {
+        check(err)
+    }
+    if err := mkdirIfNotExists("accounts/default"); err != nil {
+        check(err)
     }
 
 	if len(os.Args) > 2 {
