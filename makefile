@@ -8,6 +8,9 @@ build: server.go
 clean:
 	rm doccer
 
+rmproject:
+	rm accounts; rm content
+
 integration: 
 	nosetests
 
@@ -17,4 +20,4 @@ integration-xunit:
 unittests:
 	go test
 
-jenkins: build unittests integration-xunit
+jenkins: build unittests integration-xunit rmproject
