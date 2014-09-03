@@ -1,7 +1,6 @@
 all: build
 
-test: build integration
-
+test: build unittests integration
 
 build: server.go
 	go build -o doccer server.go
@@ -12,3 +11,10 @@ clean:
 integration: 
 	nosetests
 
+integration-xunit:
+	nosetests --with-xunit --xunit-file=integration.xml
+
+unittests:
+	go test
+
+jenkins: build unittests integration-xunit
