@@ -36,11 +36,18 @@ function Doccer() {
         }
 
         this.newDoc = function(name, callback) {
-            this.api(
-                '/new', 'POST', callback,
-                'name=' + encodeURIComponent(name)
-            )
-            return new Promise(function(resolve, deny) {});
+            var that = this;
+            return new Promise(function(resolve, reject) {
+                var callback = function(resp) {
+                    var doc = new that.Doc(resp.doc, that);
+                    resolve(doc);
+                };
+                this.api(
+                    '/new', 'POST', callback,
+                    'name=' + encodeURIComponent(name)
+                );
+
+            });
         }
 
         this.save = function(name, content, callback) {

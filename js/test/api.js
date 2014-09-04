@@ -44,3 +44,44 @@ describe('newDoc', function() {
 
 });
 
+describe('Doc', function() {
+
+    beforeEach(function() {
+        this.doccer = new Doccer();
+        this.doccer.api = function() {};
+    });
+
+    it('should make new doc from json data and doccer instance', function() {
+        var doc = new this.doccer.Doc({
+            name: 'A name',
+            content: 'Some content',
+            encoded: 'encoding',
+            history: [
+                {
+                    ts: '',
+                    hash: ''
+                },
+                {
+                    ts: '',
+                    hash: ''
+                },
+                {
+                    ts: '',
+                    hash: ''
+                },
+                {
+                    ts: '',
+                    hash: ''
+                }
+            ]
+        }, this.doccer);
+
+        assert.instanceOf(doc, this.doccer.Doc)
+        assert.equal(doc.doccer, this.doccer)
+        assert.equal(doc.content, 'Some content')
+        assert.equal(doc.name, 'A name')
+
+
+    });
+
+});
