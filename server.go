@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -108,10 +107,7 @@ func parseCommit(commit string) (commitMap map[string]string) {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles("frontends/plain-js/index.html")
-	check(err)
-	t.Execute(w, "")
-
+	http.ServeFile(w, r, "frontends/angular/index.html")
 }
 
 func blobHandler(w http.ResponseWriter, r *http.Request) {
@@ -217,25 +213,24 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func mkdirIfNotExists(path string) (e error) {
-    if _, err := os.Stat(path); err != nil {
-        if os.IsNotExist(err) {
-            e = os.MkdirAll(path, 0744)
-        }
-    }
-    return e
-
+	if _, err := os.Stat(path); err != nil {
+		if os.IsNotExist(err) {
+			e = os.MkdirAll(path, 0744)
+		}
+	}
+	return e
 
 }
 
 func main() {
 	var address string = "127.0.0.1"
 	var port int = 4121
-    if err := mkdirIfNotExists("content"); err != nil {
-        check(err)
-    }
-    if err := mkdirIfNotExists("accounts/default"); err != nil {
-        check(err)
-    }
+	if err := mkdirIfNotExists("content"); err != nil {
+		check(err)
+	}
+	if err := mkdirIfNotExists("accounts/default"); err != nil {
+		check(err)
+	}
 
 	if len(os.Args) > 2 {
 		address = os.Args[1]

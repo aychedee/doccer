@@ -1,0 +1,278 @@
+<html lang="en" ng-app="DoccerApp">
+  <head>
+    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/angular_material/0.7.1/angular-material.min.css">
+    <link rel="stylesheet" href="//cdn.quilljs.com/0.19.8/quill.snow.css" />
+
+<style>
+    .menuBtn {
+      background-color: transparent;
+      border: none;
+      height: 38px;
+      margin: 16px;
+      position: absolute;
+      width: 36px;
+    } 
+    md-toolbar h1 {
+      font-size: 1.250em;
+      font-weight: 400;
+      margin: auto;
+    }
+    md-list .md-button {
+      color: inherit;
+      font-weight: 500;
+      text-align: left;
+      width: 100%;
+    }
+    .visually-hidden {
+      border: 0;
+      clip: rect(0 0 0 0);
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      padding: 0; 
+      position: absolute;
+      width: 1px;
+    }
+    /* Using Data-URI converted from svg until <md-icon> becomes available 
+    https://github.com/google/material-design-icons
+    */
+    .menuBtn {
+      background: transparent url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHg9IjBweCIgeT0iMHB4IiB3aWR0aD0iMjRweCIgaGVpZ2h0PSIyNHB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDI0IDI0IiB4bWw6c3BhY2U9InByZXNlcnZlIj4KPGcgaWQ9IkhlYWRlciI+CiAgICA8Zz4KICAgICAgICA8cmVjdCB4PSItNjE4IiB5PSItMjIzMiIgZmlsbD0ibm9uZSIgd2lkdGg9IjE0MDAiIGhlaWdodD0iMzYwMCIvPgogICAgPC9nPgo8L2c+CjxnIGlkPSJMYWJlbCI+CjwvZz4KPGcgaWQ9Ikljb24iPgogICAgPGc+CiAgICAgICAgPHJlY3QgZmlsbD0ibm9uZSIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ii8+CiAgICAgICAgPHBhdGggZD0iTTMsMThoMTh2LTJIM1YxOHogTTMsMTNoMTh2LTJIM1YxM3ogTTMsNnYyaDE4VjZIM3oiIHN0eWxlPSJmaWxsOiNmM2YzZjM7Ii8+CiAgICA8L2c+CjwvZz4KPGcgaWQ9IkdyaWQiIGRpc3BsYXk9Im5vbmUiPgogICAgPGcgZGlzcGxheT0iaW5saW5lIj4KICAgIDwvZz4KPC9nPgo8L3N2Zz4=) no-repeat  center center;
+    }
+</style>
+
+  </head>
+  <body layout="column" ng-controller="AppCtrl">
+    <md-toolbar layout="row">
+      <button ng-click="toggleSidenav('left')" class="menuBtn">
+        <span class="visually-hidden">Menu</span>
+      </button>
+      <h1>Doccer</h1>
+    </md-toolbar>
+    <div layout="row" flex>
+        <md-sidenav layout="column" class="md-sidenav-left md-whiteframe-z2" md-component-id="left" md-is-locked-open="$media('gt-sm')">
+           <md-content flex>
+              <ul class="docs-menu">
+                <li class="parent-list-item" ng-class="parentActive">
+                  <h2 class="menu-heading" id="heading_docs">
+                    Documents
+                  </h2>
+                  <menu-link section="section" ng-if="section.type === 'link'"></menu-link>
+
+                  <menu-toggle section="section" ng-if="section.type === 'toggle'"></menu-toggle>
+
+                  <ul ng-if="docList.length > 0" class="menu-nested-list">
+                    <li ng-repeat="doc in docList" ng-class="{'childActive' : isSectionSelected(doc)}">
+                      <menu-toggle section="doc"></menu-toggle>
+                        {{ doc.name }}
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </md-content>
+        </md-sidenav>
+        <div layout="column" flex id="content">
+            <md-content layout="column" flex class="md-padding">
+                <md-input-container>
+                    <input value="{{ doc.name }}" ng-model="doc.name">
+                </md-input-container>
+                <div id="editor-toolbar">
+
+                  <select class="ql-size">
+                    <option value="small">Small</option>
+                    <option value="normal" selected>Normal</option>
+                    <option value="large">Large</option>
+                    <option value="huge">Huge</option>
+                  </select>
+
+                  <span class="ql-format-group">
+
+                      <span class="ql-bold ql-format-button"></span>
+                      <span class="ql-italic ql-format-button"></span>
+                      <span class="ql-strike ql-format-button"></span>
+                      <span class="ql-underline ql-format-button"></span>
+                      <span class="ql-link ql-format-button"></span>
+
+                  </span>
+
+                  <md-button ng-click="saveDoc()" class="md-no-ink md-primary">Checkpoint</md-button>
+                  <md-button class="md-no-ink md-primary">New</md-button>
+
+                </div>
+                <div id="editor"></div>
+              
+                <div layout>
+                    <div flex="10" layout layout-align="center center">
+                        <span>md-primary</span>
+                    </div>
+                    <md-slider flex class="md-primary" md-discrete ng-model="doc.position" step="1" min="1" max="{{ doc.history.length }}" aria-label="rating">
+                    </md-slider>
+                </div>
+            </md-content>
+        </div>
+    </div>
+    <!-- Angular Material Dependencies -->
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.6/angular.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.6/angular-animate.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.6/angular-aria.min.js"></script>
+
+    <script src="//ajax.googleapis.com/ajax/libs/angular_material/0.7.1/angular-material.min.js"></script>
+    <script src="//cdn.quilljs.com/0.19.8/quill.js"></script>
+    <script src="/static/doccer.js"></script>
+
+<script>
+
+    var app = angular.module('DoccerApp', ['ngMaterial']);
+
+    app.controller('AppCtrl', [
+            '$scope', 
+            '$mdSidenav', 
+            'doccer', 
+            function(
+                $scope, 
+                $mdSidenav, 
+                doccer
+            ){
+                function toggleSidenav(menuId) {
+                    $mdSidenav(menuId).toggle();
+                };
+
+                function fetchDocs() {
+                    doccer.listDocs(function(resp) {
+                        $scope.docList = resp;
+                        $scope.doc = resp[0];
+                    });
+                }
+
+                function saveDoc() {
+                    console.log($scope.doc);
+                    doccer.save(
+                        $scope.doc.name, 
+                        editor.getHTML(), 
+                        function(resp) {console.log(resp);}
+                    );
+
+
+                }
+
+        fetchDocs();
+        $scope.toggleSidenav = toggleSidenav;
+        $scope.saveDoc = saveDoc;
+
+        console.log($scope);
+
+
+     
+    }]);
+
+    app.service('doccer', 
+        [
+            '$http',
+            function($http) {
+
+                function Doc(doc, doccer) {
+                    this.name = doc.name;
+                    this.doccer = doccer;
+                    this.content = doc.content;
+                    this.encoded = doc.encoded;
+                    this.history = [];
+                    this.position = doc.history.length;
+                    for (var i=0; i < doc.history.length; i++) {
+                        this.history.push({
+                            date: new Date(doc.history[i].ts),
+                            hash: doc.history[i].hash,
+                            content: ''
+                        });
+                    }
+                }
+
+                function Doccer() {}
+
+                Doccer.prototype = {
+                    Doc: Doc,
+                    listDocs: function(callback) {
+                        this.api('/docs', 'GET', callback)
+
+                    },
+                    newDoc: function(name, callback) {
+                        this.api(
+                            '/new', 'POST', callback,
+                            'name=' + encodeURIComponent(name)
+                        )
+                    },
+                    save: function(name, content, callback) {
+                        this.api(
+                            '/save', 'POST', callback,
+                            'name=' + encodeURIComponent(name) + '&' + 'content=' + encodeURIComponent(content)
+                        )
+                    },
+                    listDocs: function(callback) {
+                        this.api('/docs', 'GET', callback)
+                    },
+                    getDoc: function(name, cHash, callback) {
+                        var cb = function(callback, resp) {
+                            this.doc = new this.Doc(resp);
+                            return callback(resp);
+                        }
+                        this.api('/doc/' + encodeURIComponent(name) + '/' + cHash, 'GET', cb.bind(this, callback))
+                    },
+
+                    getBlob: function(hash, callback) {
+                        this.api('/blob/' + hash, callback)
+                    },
+                    api: function(endpoint, method, callback, data) {
+                        var xhr;
+
+                        if (window.XMLHttpRequest) {
+                            // code for IE7+, Firefox, Chrome, Opera, Safari
+                            xhr = new XMLHttpRequest();
+                        } else {
+                            // code for IE6, IE5
+                            xhr = new ActiveXObject("Microsoft.XMLHTTP");
+                        }
+
+                        xhr.onreadystatechange = function() {
+                            if (xhr.readyState == 4 ) {
+                               if(xhr.status == 200){
+                                   var resp = JSON.parse(xhr.responseText);
+                                   callback(resp);
+                               }
+                               else if(xhr.status == 400) {
+                                  console.log('There was an error 400')
+                               }
+                               else {
+                                   console.log('xhr.status was ' + xhr.status)
+                               }
+                            }
+                        }
+                        xhr.open(method, endpoint, true);
+                        if (method.toLowerCase() === 'post') {
+                            xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                            xhr.send(data);
+                        } else {
+                            xhr.send();
+                        }
+                    }
+                };
+
+                return new Doccer()
+
+
+            }
+        ]
+    );
+
+</script>
+<script>
+    var editor = new Quill(
+        '#editor', 
+        {
+            theme: 'snow',
+            modules: {
+                'toolbar': { container: '#editor-toolbar'}
+            }
+        }
+    );
+</script>
+</body>
+</html>
